@@ -1,0 +1,59 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../.prisma-generated"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       Int     @id @default(autoincrement())
+  username String  @unique
+  email    String  @unique
+
+  rideGroups     RideGroup[]      @relation("UserRideGroups")
+  participations Participation[]
+}
+
+model Station {
+  id   Int    @id
+  name String
+  lat  Float
+  lng  Float
+
+  startRideGroups RideGroup[] @relation("StartStationRideGroups")
+  endRideGroups   RideGroup[] @relation("EndStationRideGroups")
+}
+
+model RideGroup {
+  id            Int      @id @default(autoincrement())
+  title         String
+  departureTime DateTime
+
+  creatorId      Int
+  startStationId Int
+  endStationId   Int?
+
+  creator      User       @relation("UserRideGroups", fields: [creatorId], references: [id])
+  startStation Station    @relation("StartStationRideGroups", fields: [startStationId], references: [id])
+  endStation   Station?   @relation("EndStationRideGroups", fields: [endStationId], references: [id])
+  participants Participation[]
+}
+
+model Participation {
+  userId      Int
+  rideGroupId Int
+
+  user      User      @relation(fields: [userId], references: [id])
+  rideGroup RideGroup @relation(fields: [rideGroupId], references: [id])
+
+  @@id([userId, rideGroupId])
+}

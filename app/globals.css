@@ -1,0 +1,141 @@
+@import "tailwindcss";
+
+/* theme-sky-v3 — fond bleu ciel (pas de mauve) */
+:root {
+  --foreground: #e0f2fe;
+  --bg-base: #020617;
+  --bg-mid: #0c1929;
+  --bg-sky: #0369a1;
+}
+
+@theme inline {
+  --color-background: #020617;
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+html {
+  min-height: 100%;
+  background: #020617 !important;
+}
+
+body {
+  min-height: 100vh;
+  color: var(--foreground) !important;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  background-color: #020617 !important;
+  background-image:
+    radial-gradient(
+      ellipse 100% 70% at 10% -5%,
+      rgba(56, 189, 248, 0.25),
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse 80% 55% at 95% 10%,
+      rgba(14, 165, 233, 0.2),
+      transparent 50%
+    ),
+    linear-gradient(
+      160deg,
+      #020617 0%,
+      #0c1929 30%,
+      #0c4a6e 55%,
+      #0369a1 80%,
+      #082f49 100%
+    ) !important;
+  background-attachment: fixed !important;
+}
+
+.app-shell {
+  min-height: 100vh;
+  color: #e0f2fe;
+  background: transparent !important;
+}
+
+.app-shell .text-zinc-400 {
+  color: #7dd3fc !important;
+}
+
+.app-shell .text-zinc-500 {
+  color: #38bdf8 !important;
+}
+
+.app-shell .text-zinc-300 {
+  color: #bae6fd !important;
+}
+
+.app-shell .text-zinc-100,
+.app-shell .text-zinc-50 {
+  color: #e0f2fe !important;
+}
+
+.app-shell .text-zinc-200 {
+  color: #f0f9ff !important;
+}
+
+.app-header {
+  border-bottom: 1px solid rgba(56, 189, 248, 0.25);
+  background: rgba(2, 6, 23, 0.9) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.app-card {
+  border: 1px solid rgba(56, 189, 248, 0.3) !important;
+  background: rgba(15, 23, 42, 0.94) !important;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: #e0f2fe !important;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.app-card-strong {
+  border: 1px solid rgba(125, 211, 252, 0.35) !important;
+  background: rgba(15, 23, 42, 0.97) !important;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  color: #e0f2fe !important;
+}
+
+.app-card-muted {
+  border: 1px solid rgba(56, 189, 248, 0.25) !important;
+  background: rgba(2, 6, 23, 0.92) !important;
+  backdrop-filter: blur(10px);
+  color: #bae6fd !important;
+}
+
+.app-input {
+  border: 1px solid rgba(56, 189, 248, 0.4) !important;
+  background: rgba(2, 6, 23, 0.98) !important;
+  color: #e0f2fe !important;
+}
+
+.app-input:focus {
+  border-color: #0ea5e9 !important;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.35);
+}
+
+.app-sidebar {
+  border-color: rgba(56, 189, 248, 0.25) !important;
+  background: rgba(2, 6, 23, 0.92) !important;
+  backdrop-filter: blur(14px);
+}
+
+.app-map-frame {
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  background: rgba(2, 6, 23, 0.85);
+}
+
+.app-overlay {
+  background: rgba(8, 47, 73, 0.88) !important;
+  color: #e0f2fe;
+}
+
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+  background: #0c4a6e !important;
+}
