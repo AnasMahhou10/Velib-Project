@@ -1,6 +1,6 @@
 // Seed Prisma with Velib stations from OpenData Paris + demo user
 
-const { PrismaClient } = require("../.prisma-generated/client");
+const { PrismaClient } = require("@prisma/client");
 const axios = require("axios");
 
 const prisma = new PrismaClient();

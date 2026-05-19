@@ -17,10 +17,11 @@ cp .env.example .env
 docker compose up --build
 ```
 
-Ouvre [http://localhost:3000](http://localhost:3000).
+Ouvre [http://localhost:3001](http://localhost:3001) (Docker utilise le port **3001** pour éviter le conflit avec `npm run dev` sur 3000).
 
 - Premier lancement : ~5–8 min (build + seed OpenData Paris).
 - Le seed nécessite **Internet** (API OpenData Paris).
+- Développement local sans Docker : `npm run dev` → [http://localhost:3000](http://localhost:3000).
 
 ## Démarrage local (sans Docker)
 

@@ -14,6 +14,9 @@ if ! nc -z db 5432 2>/dev/null; then
   exit 1
 fi
 
+echo "Generating Prisma client..."
+npx prisma generate
+
 echo "Applying database schema..."
 npx prisma db push
 

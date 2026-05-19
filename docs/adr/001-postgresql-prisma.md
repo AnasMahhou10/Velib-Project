@@ -10,7 +10,7 @@ Le projet gère des utilisateurs, stations, balades et participations avec des r
 
 ## Décision
 
-PostgreSQL + Prisma ORM (client généré dans `.prisma-generated/`).
+PostgreSQL + Prisma ORM (client `@prisma/client`).
 
 ## Conséquences
 
