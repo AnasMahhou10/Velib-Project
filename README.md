@@ -17,7 +17,7 @@ cp .env.example .env
 docker compose up --build
 ```
 
-Ouvre [http://localhost:3001](http://localhost:3001) (Docker utilise le port **3001** pour éviter le conflit avec `npm run dev` sur 3000).
+Ouvre [http://localhost:3001](http://localhost:3001) (Docker utilise le port **3001** pour éviter le conflit avec `npm run dev` sur 3000). Le conteneur `app` définit `DATABASE_URL` vers `db` automatiquement ; `prisma generate` tourne au démarrage (entrypoint).
 
 - Premier lancement : ~5–8 min (build + seed OpenData Paris).
 - Le seed nécessite **Internet** (API OpenData Paris).
@@ -30,11 +30,10 @@ Ouvre [http://localhost:3001](http://localhost:3001) (Docker utilise le port **3
 3. Commandes :
 
 ```bash
-npm install
-npx prisma generate
+npm install          # postinstall lance prisma generate automatiquement
 npx prisma db push
 npm run prisma:seed
-npm run dev
+npm run dev          # regénère le client Prisma puis démarre Next.js
 ```
 
 ## Scripts
@@ -46,6 +45,7 @@ npm run dev
 | `npm run start` | Lance le build |
 | `npm run lint` | ESLint |
 | `npm test` | Tests unitaires (Vitest) |
+| `npm run prisma:generate` | Génère le client Prisma (aussi avant `dev` / `build`) |
 | `npm run prisma:seed` | Import stations Velib + user démo (id=1) |
 
 ## Architecture
