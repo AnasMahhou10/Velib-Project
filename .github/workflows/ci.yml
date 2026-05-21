@@ -9,6 +9,9 @@ on:
 jobs:
   quality:
     runs-on: ubuntu-latest
+    # Requis par prisma.config.ts (postinstall = prisma generate pendant npm ci)
+    env:
+      DATABASE_URL: postgresql://velib:velib@localhost:5432/velib_db
     steps:
       - uses: actions/checkout@v4
 
@@ -19,14 +22,8 @@ jobs:
 
       - run: npm ci
 
-      - run: npx prisma generate
-        env:
-          DATABASE_URL: postgresql://velib:velib@localhost:5432/velib_db
-
       - run: npm run lint
 
       - run: npm test
 
       - run: npm run build
-        env:
-          DATABASE_URL: postgresql://velib:velib@localhost:5432/velib_db
