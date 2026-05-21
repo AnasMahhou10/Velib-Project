@@ -60,6 +60,8 @@ middleware.ts     Logs API + x-request-id
 
 Décisions documentées : [`docs/adr/`](docs/adr/).
 
+**Kickoff Pack (conception cours) :** [`docs/00-kickoff-pack/`](docs/00-kickoff-pack/) — brief, scope, domaine, ERD, architecture, ADR, dette, DoD.
+
 ## MVP & dette assumée
 
 - Utilisateur fixe `userId = 1` (pas d’auth JWT au MVP).
