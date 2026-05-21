@@ -19,6 +19,7 @@ services:
       - '3001:3000'
     environment:
       DATABASE_URL: postgresql://velib:velib@db:5432/velib_db
+      JWT_SECRET: ${JWT_SECRET:-velib-docker-dev-jwt-secret-min-32-chars}
       NODE_ENV: production
     depends_on:
       db:

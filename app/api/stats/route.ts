@@ -1,19 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prismaErrorResponse, validationErrorResponse } from '../../../src/lib/apiErrors';
-import { statsQuerySchema } from '../../../src/lib/schemas/rideGroup';
-import { getUserStats } from '../../../src/services/statsService';
+import { isAuthPayload, requireAuth } from '@/lib/auth/requireAuth';
+import { prismaErrorResponse } from '@/lib/apiErrors';
+import { getUserStats } from '@/services/statsService';
 
 export async function GET(req: NextRequest) {
   try {
-    const parsed = statsQuerySchema.safeParse({
-      userId: req.nextUrl.searchParams.get('userId') ?? '1',
-    });
-
-    if (!parsed.success) {
-      return validationErrorResponse(parsed.error);
+    const authResult = await requireAuth(req);
+    if (!isAuthPayload(authResult)) {
+      return authResult;
     }
 
-    const stats = await getUserStats(parsed.data.userId);
+    const stats = await getUserStats(authResult.userId);
     return NextResponse.json(stats);
   } catch (error) {
     return prismaErrorResponse(error);

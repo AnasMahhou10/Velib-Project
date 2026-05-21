@@ -2,55 +2,67 @@
 
 ## MUST (MVP — obligatoire)
 
-| Fonctionnalité | Description | Statut implémentation |
-|----------------|-------------|------------------------|
-| Carte stations | Affichage Leaflet + API `/api/stations` | Fait |
-| Créer une balade | Titre, date/heure, départ, arrivée | Fait |
-| Lister les balades | À venir / passées (`/rides`) | Fait |
-| Rejoindre une balade | `POST /api/ride-groups/[id]/join` | Fait |
-| Stats utilisateur | Distance, kcal, nombre de balades | Fait |
-| BDD + seed | PostgreSQL, ~500 stations, user démo | Fait |
-| Docker + CI | `docker-compose`, GitHub Actions | Fait |
+| Fonctionnalité | Description | Statut |
+|----------------|-------------|--------|
+| **Inscription** | `/register` → compte + connexion auto | Fait |
+| **Connexion / déconnexion** | `/login`, cookie JWT, `/api/auth/logout` | Fait |
+| Carte stations | Leaflet + `GET /api/stations` (public) | Fait |
+| Lister balades | `GET /api/ride-groups` (public) | Fait |
+| Créer une balade | `POST /api/ride-groups` (JWT) | Fait |
+| Rejoindre | `POST /api/ride-groups/[id]/join` (JWT) | Fait |
+| Stats personnelles | `GET /api/stats` (JWT) | Fait |
+| BDD + seed | ~500 stations + compte démo | Fait |
+| Docker + CI | Compose, GitHub Actions, `JWT_SECRET` | Fait |
 
-## SHOULD (souhaitable post-MVP)
+## SHOULD (post-MVP proche)
 
-- Authentification (session ou JWT)
-- Rôles : créateur peut annuler / modifier sa balade
-- Migrations Prisma versionnées (vs `db push` seul)
-- Tests d'intégration API
+- Modifier / annuler sa balade (créateur)
+- Migrations Prisma versionnées (`migrate` vs `db push` seul)
+- Tests d'intégration API auth + ride-groups
+- Rate limiting sur login
 
 ## COULD (plus tard)
 
-- Routing réel (OSRM / OpenRouteService)
-- Notifications (email / push)
-- Filtre balades par quartier / date
-- Export iCal
+- OAuth (Google), refresh token
+- Routing OSM (OSRM)
+- Notifications email / push
+- Filtre par quartier, export iCal
+- Rôle admin / modération
 
-## WON'T (exclu explicitement)
+## WON'T (exclu)
 
 | Exclusion | Raison |
 |-----------|--------|
-| Paiement / abonnement Vélib' | Hors périmètre produit |
-| App mobile native | Web responsive suffit au MVP |
-| Chat intégré | WhatsApp / Signal suffisent |
-| Multi-villes | Paris uniquement (données OpenData) |
-| Auth complète au rendu 22/05 | Dette documentée (ADR-003) |
+| Paiement Vélib' | Hors produit |
+| App mobile native | Web responsive suffit |
+| Chat intégré | Outils externes |
+| Multi-villes | OpenData Paris uniquement |
+| RBAC admin en BDD | Pas de table `Role` au MVP |
 
-## Parcours utilisateur MVP
+## Parcours utilisateur (avec auth)
 
 ```mermaid
 flowchart LR
-  A[Accueil carte] --> B[Sélection départ / arrivée]
-  B --> C[Formulaire balade]
-  C --> D[Balade créée]
-  D --> E[/rides — à venir]
-  E --> F[Rejoindre]
-  E --> G[Passées + stats]
+  R[/register] --> L[JWT cookie]
+  LN[/login] --> L
+  L --> A[Carte /]
+  A --> B[Créer balade JWT]
+  B --> C[/rides]
+  C --> D[Rejoindre JWT]
+  C --> E[Stats JWT]
 ```
+
+## Compte démo (seed)
+
+| Champ | Valeur |
+|-------|--------|
+| Email | `demo@example.com` |
+| Mot de passe | `demo1234` |
+| Pseudo | `demo` |
 
 ## Jalons
 
 | Date | Jalon |
 |------|-------|
-| J-3 | Kickoff Pack + checkpoint conception |
-| 22/05 | MVP démo + repo GitHub à jour |
+| J-3 | Kickoff Pack + checkpoint |
+| 22/05 | MVP + repo GitHub |

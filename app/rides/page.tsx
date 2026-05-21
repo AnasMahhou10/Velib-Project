@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import AppNavLink from '@/components/AppNavLink';
+import AuthNav from '@/components/AuthNav';
+import { useAuth } from '@/components/AuthProvider';
 import StatsCharts from '@/components/StatsCharts';
 import { sumMetrics } from '@/lib/enrichRide';
 import {
@@ -43,20 +45,20 @@ type RideGroup = {
 
 type Tab = 'upcoming' | 'past' | 'stats';
 
-const CURRENT_USER_ID = 1;
-
-function isJoined(ride: RideGroup) {
-  return ride.participants?.some((p) => p.userId === CURRENT_USER_ID) ?? false;
+function isJoined(ride: RideGroup, userId: number | undefined) {
+  if (!userId) return false;
+  return ride.participants?.some((p) => p.userId === userId) ?? false;
 }
 
 function isPast(ride: RideGroup) {
   return new Date(ride.departureTime).getTime() < Date.now();
 }
 
-function isMyRide(ride: RideGroup) {
+function isMyRide(ride: RideGroup, userId: number | undefined) {
+  if (!userId) return false;
   return (
-    ride.creator?.id === CURRENT_USER_ID ||
-    ride.participants?.some((p) => p.userId === CURRENT_USER_ID)
+    ride.creator?.id === userId ||
+    ride.participants?.some((p) => p.userId === userId)
   );
 }
 
@@ -147,16 +149,20 @@ function RideCard({
   ride,
   joiningId,
   onJoin,
+  currentUserId,
+  isLoggedIn,
   compact = false,
 }: {
   ride: RideGroup;
   joiningId: number | null;
   onJoin: (id: number) => void;
+  currentUserId: number | undefined;
+  isLoggedIn: boolean;
   compact?: boolean;
 }) {
-  const joined = isJoined(ride);
+  const joined = isJoined(ride, currentUserId);
   const past = isPast(ride);
-  const isCreator = ride.creator?.id === CURRENT_USER_ID;
+  const isCreator = currentUserId != null && ride.creator?.id === currentUserId;
   const participantCount = ride.participants?.length ?? 0;
   const names = ride.participants?.map((p) => p.user.username) ?? [];
 
@@ -257,6 +263,13 @@ function RideCard({
               <span className="inline-flex items-center justify-center rounded-md border border-sky-500/40 bg-sky-950/60 px-3 py-1.5 text-xs text-sky-200">
                 Balade passée
               </span>
+            ) : !isLoggedIn ? (
+              <AppNavLink
+                href="/login"
+                className="inline-flex items-center justify-center rounded-md border border-sky-300/40 bg-sky-950/60 px-4 py-2 text-xs font-medium text-sky-100 hover:bg-sky-900/60"
+              >
+                Se connecter
+              </AppNavLink>
             ) : (
               <button
                 type="button"
@@ -513,6 +526,8 @@ function RidesTabNav({
 }
 
 export default function RidesPage() {
+  const { user } = useAuth();
+  const currentUserId = user?.id;
   const [rides, setRides] = useState<RideGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -540,13 +555,17 @@ export default function RidesPage() {
   }, []);
 
   async function handleJoin(rideId: number) {
+    if (!user) {
+      setError('Connecte-toi pour rejoindre une balade.');
+      return;
+    }
+
     try {
       setJoiningId(rideId);
       setError(null);
       const res = await fetch(`/api/ride-groups/${rideId}/join`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: CURRENT_USER_ID }),
+        credentials: 'include',
       });
       if (!res.ok) {
         const data = await res.json().catch(() => null);
@@ -588,13 +607,13 @@ export default function RidesPage() {
   const joinedRides = useMemo(
     () =>
       rides
-        .filter((r) => isJoined(r) && !isPast(r))
+        .filter((r) => isJoined(r, currentUserId) && !isPast(r))
         .sort(
           (a, b) =>
             new Date(a.departureTime).getTime() -
             new Date(b.departureTime).getTime(),
         ),
-    [rides],
+    [rides, currentUserId],
   );
 
   const displayedRides =
@@ -605,8 +624,8 @@ export default function RidesPage() {
   );
 
   const myRides = useMemo(
-    () => rides.filter(isMyRide),
-    [rides],
+    () => rides.filter((r) => isMyRide(r, currentUserId)),
+    [rides, currentUserId],
   );
 
   const myTotals = useMemo(() => sumMetrics(myRides), [myRides]);
@@ -634,6 +653,7 @@ export default function RidesPage() {
             >
               Carte
             </AppNavLink>
+            <AuthNav />
           </div>
         </div>
       </header>
@@ -766,6 +786,8 @@ export default function RidesPage() {
                           ride={ride}
                           joiningId={joiningId}
                           onJoin={handleJoin}
+                          currentUserId={currentUserId}
+                          isLoggedIn={!!user}
                         />
                       ))}
                     </div>
@@ -782,6 +804,8 @@ export default function RidesPage() {
                     ride={ride}
                     joiningId={joiningId}
                     onJoin={handleJoin}
+                    currentUserId={currentUserId}
+                    isLoggedIn={!!user}
                   />
                 ))}
               </div>
@@ -793,7 +817,9 @@ export default function RidesPage() {
             <div className="app-card sticky top-4 rounded-xl p-4">
               <h2 className="text-lg font-semibold">Mes prochaines balades</h2>
               <p className="mt-1 text-xs text-zinc-400">
-                Compte MVP · user id {CURRENT_USER_ID}
+                {user
+                  ? `Connecté · ${user.username}`
+                  : 'Connecte-toi pour voir tes inscriptions'}
               </p>
 
               <div className="mt-4 space-y-3">
@@ -822,6 +848,8 @@ export default function RidesPage() {
                       ride={ride}
                       joiningId={joiningId}
                       onJoin={handleJoin}
+                      currentUserId={currentUserId}
+                      isLoggedIn={!!user}
                       compact
                     />
                   ))}

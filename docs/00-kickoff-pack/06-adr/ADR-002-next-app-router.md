@@ -11,8 +11,9 @@ Besoin d'une UI React et d'API REST dans un seul dépôt, avec carte Leaflet cô
 ## Décision
 
 - **Framework :** Next.js 16, App Router
-- **Pages :** `app/page.tsx`, `app/rides/page.tsx`
-- **API :** `app/api/**/route.ts`
+- **Pages :** `app/page.tsx`, `app/rides/page.tsx`, `app/login/`, `app/register/`
+- **API :** `app/api/**/route.ts` (dont `app/api/auth/`)
+- **Contexte client :** `AuthProvider` + `AuthNav`
 - **Carte :** import dynamique `StationsMap` avec `ssr: false`
 - **Logique métier :** hors routes — `src/services/`, `src/lib/`
 

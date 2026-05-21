@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prismaErrorResponse, validationErrorResponse } from '../../../../../src/lib/apiErrors';
-import { joinRideGroupSchema } from '../../../../../src/lib/schemas/rideGroup';
-import { joinRideGroup } from '../../../../../src/services/rideGroupService';
+import { isAuthPayload, requireAuth } from '@/lib/auth/requireAuth';
+import { prismaErrorResponse } from '@/lib/apiErrors';
+import { joinRideGroup } from '@/services/rideGroupService';
 
 type RouteParams = {
   id: string;
@@ -12,21 +12,25 @@ export async function POST(
   context: { params: Promise<RouteParams> },
 ) {
   try {
+    const authResult = await requireAuth(req);
+    if (!isAuthPayload(authResult)) {
+      return authResult;
+    }
+
     const { id } = await context.params;
     const rideGroupId = Number(id);
 
     if (!rideGroupId || Number.isNaN(rideGroupId)) {
-      return NextResponse.json({ error: 'Identifiant de balade invalide.' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Identifiant de balade invalide.' },
+        { status: 400 },
+      );
     }
 
-    const body = await req.json();
-    const parsed = joinRideGroupSchema.safeParse(body);
-
-    if (!parsed.success) {
-      return validationErrorResponse(parsed.error);
-    }
-
-    const participation = await joinRideGroup(rideGroupId, parsed.data.userId);
+    const participation = await joinRideGroup(
+      rideGroupId,
+      authResult.userId,
+    );
     return NextResponse.json(participation, { status: 201 });
   } catch (error) {
     return prismaErrorResponse(error);

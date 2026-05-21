@@ -4,75 +4,96 @@
 
 | Entité | Description |
 |--------|-------------|
-| **User** | Utilisateur de l'app (MVP : id=1 démo) |
-| **Station** | Point Velib' (id = code OpenData, lat/lng) |
-| **RideGroup** | Balade organisée (titre, horaire, créateur, trajet) |
-| **Participation** | Lien User ↔ RideGroup (inscription) |
+| **User** | Compte (pseudo, email, `passwordHash` bcrypt) |
+| **Station** | Borne Vélib' (id OpenData, lat/lng) |
+| **RideGroup** | Balade (titre, horaire, créateur, trajet) |
+| **Participation** | Inscription User ↔ RideGroup |
 
-## RBAC (MVP vs cible)
+## RBAC
 
-| Rôle | MVP | Cible V2 |
-|------|-----|----------|
-| Visiteur | Non (user fixe) | Lecture carte publique |
-| Membre | Créer / rejoindre / voir stats (user 1) | CRUD ses participations |
-| Créateur | Idem membre + `creatorId` sur balade | Modifier / annuler sa balade |
-| Admin | — | Modération stations / users |
+| Rôle | Droits |
+|------|--------|
+| **Visiteur** | Carte, liste balades (`GET` public) |
+| **Membre** (JWT) | Créer balade, rejoindre, stats perso |
+| **Créateur** | `creatorId` = id du token |
+| **Admin** | Non implémenté |
 
-**MVP :** pas de table `Role` ; `CURRENT_USER_ID = 1` dans `app/page.tsx` et `app/rides/page.tsx`.
+Auth : [ADR-004](./06-adr/ADR-004-jwt-auth.md) — cookie `auth_token`, pas de table `Role`.
 
 ## Règles métier (BR)
 
 | ID | Règle | Implémentation |
 |----|-------|----------------|
-| BR-01 | Titre et date de départ obligatoires | Zod `createRideGroupSchema` |
-| BR-02 | Stations départ et arrivée doivent exister | FK Prisma + validation IDs positifs |
-| BR-03 | Un user ne peut pas s'inscrire deux fois à la même balade | PK composite `(userId, rideGroupId)` |
-| BR-04 | Balade **à venir** si `departureTime > now`, sinon **passée** | Logique UI `/rides` |
-| BR-05 | Distance / kcal affichées seulement si départ **et** arrivée | `computeRideMetrics` retourne `null` sinon |
-| BR-06 | Distance = Haversine × 1,25 ; kcal = 30 × km | `src/lib/rideMetrics.ts` |
-| BR-07 | Créateur auto-upsert si absent (démo) | `rideGroupService.createRideGroup` |
+| BR-01 | Titre et date obligatoires | `createRideGroupSchema` |
+| BR-02 | Stations existantes | FK Prisma |
+| BR-03 | Pas de double inscription | PK `(userId, rideGroupId)` |
+| BR-04 | À venir / passée | `departureTime` vs `now` |
+| BR-05 | Métriques si départ + arrivée | `computeRideMetrics` |
+| BR-06 | Haversine × 1,25 ; 30 kcal/km | `rideMetrics.ts` |
+| BR-07 | Create / join / stats → connecté | middleware + `requireAuth` |
+| BR-08 | Pas de `userId` / `creatorId` client | ID depuis JWT |
+| BR-09 | Email / pseudo uniques | vérif avant `create` + UNIQUE BDD |
+| BR-10 | `passwordHash` jamais exposé | `select` partiel sur User |
 
-## Machine à états — Balade (logique)
+## Flux inscription / connexion
 
-Pas de colonne `status` en base : dérivé de `departureTime`.
+```mermaid
+sequenceDiagram
+  participant U as Utilisateur
+  participant UI as /register ou /login
+  participant API as /api/auth/*
+  participant DB as PostgreSQL
+
+  U->>UI: formulaire
+  UI->>API: POST register ou login
+  API->>DB: User create ou verify bcrypt
+  API-->>UI: Set-Cookie auth_token JWT
+  UI-->>U: redirect / (connecté)
+```
+
+## Machines à états — Balade
 
 ```mermaid
 stateDiagram-v2
-  [*] --> Draft: sélection carte
-  Draft --> Created: POST /api/ride-groups
+  [*] --> Draft: carte
+  Draft --> Created: POST ride-groups JWT
   Created --> Upcoming: departureTime > now
-  Upcoming --> Past: departureTime <= now
-  Past --> [*]
+  Upcoming --> Past: date passée
 ```
 
-| État | Condition |
-|------|-----------|
-| Draft | Stations sélectionnées, formulaire non envoyé |
-| Created / Upcoming | Enregistrée, date future |
-| Past | Date passée |
-
-## Machine à états — Participation
+## Machines à états — Participation
 
 ```mermaid
 stateDiagram-v2
   [*] --> NotJoined
-  NotJoined --> Joined: POST join
-  Joined --> NotJoined: suppression (non implémenté MVP)
+  NotJoined --> Joined: POST join JWT
 ```
 
-## API métier (ressources)
+## API
 
-| Méthode | Route | Action |
-|---------|-------|--------|
-| GET | `/api/stations` | Liste stations |
-| GET/POST | `/api/ride-groups` | Lister / créer balades |
-| POST | `/api/ride-groups/[id]/join` | S'inscrire |
-| GET | `/api/stats?userId=1` | Stats agrégées |
+### Auth
+
+| Méthode | Route |
+|---------|-------|
+| POST | `/api/auth/register` |
+| POST | `/api/auth/login` |
+| POST | `/api/auth/logout` |
+| GET | `/api/auth/me` |
+
+### Métier
+
+| Méthode | Route | Auth |
+|---------|-------|------|
+| GET | `/api/stations` | — |
+| GET | `/api/ride-groups` | — |
+| POST | `/api/ride-groups` | JWT |
+| POST | `/api/ride-groups/[id]/join` | JWT |
+| GET | `/api/stats` | JWT |
 
 ## Glossaire
 
 | Terme | Définition |
 |-------|------------|
-| Balade / RideGroup | Événement cycliste planifié |
-| Station | Borne Vélib' Paris |
-| Participation | Inscription d'un user à une balade |
+| JWT | Token signé HS256, stocké en cookie httpOnly |
+| RideGroup | Balade organisée |
+| Participation | Lien d’inscription à une balade |

@@ -2,97 +2,111 @@
 
 ## Vue d'ensemble
 
-Application **full-stack monorepo** Next.js : UI React (App Router) + API REST interne + couche services + Prisma + PostgreSQL.
+Monorepo **Next.js 16** : UI React, API REST, auth JWT, services métier, Prisma, PostgreSQL.
 
 ## Schéma de composants
 
 ```mermaid
 flowchart TB
   subgraph Client
-    U[Utilisateur navigateur]
-    FE[Pages React app/]
-    MAP[StationsMap Leaflet]
+    U[Utilisateur]
+    FE[app/ pages]
+    AUTHUI[login register AuthNav]
+    MAP[StationsMap]
   end
 
-  subgraph NextServer["Next.js serveur"]
-    API[API Routes app/api/]
-    MW[middleware.ts logs + x-request-id]
+  subgraph NextServer["Next.js"]
+    API[app/api]
+    AUTHLIB[src/lib/auth jose bcrypt]
+    MW[middleware JWT guard]
     SVC[src/services]
-    LIB[src/lib schemas Zod rideMetrics]
-    PR[Prisma Client]
+    ZOD[src/lib/schemas]
+    PR[Prisma]
   end
 
   subgraph Data
     PG[(PostgreSQL)]
-    ODP[OpenData Paris API]
+    ODP[OpenData Paris]
   end
 
+  U --> AUTHUI
   U --> FE
   FE --> MAP
   FE --> API
   API --> MW
-  MW --> API
+  MW --> AUTHLIB
   API --> SVC
-  SVC --> LIB
+  SVC --> ZOD
+  SVC --> AUTHLIB
   SVC --> PR
   PR --> PG
   ODP -. seed .-> PG
 ```
 
-## Couches et responsabilités
+## Couches
 
 | Couche | Dossier | Rôle |
 |--------|---------|------|
-| Présentation | `app/`, `src/components/` | Pages, carte, formulaires |
-| API | `app/api/**/route.ts` | HTTP, parsing, codes erreur |
-| Validation | `src/lib/schemas/` | Zod (entrées API) |
-| Métier | `src/services/` | `rideGroupService`, `statsService` |
-| Calculs | `src/lib/rideMetrics.ts`, `enrichRide.ts` | Distance, kcal, enrichissement DTO |
-| Accès données | `src/lib/prisma.ts` | Singleton Prisma |
-| Persistance | `prisma/schema.prisma` | Modèle relationnel |
+| UI | `app/`, `src/components/` | Carte, balades, `AuthProvider`, `AuthNav` |
+| Auth UI | `app/login/`, `app/register/` | Formulaires |
+| API | `app/api/**/route.ts` | HTTP + codes erreur |
+| Auth | `src/lib/auth/`, `src/services/authService.ts` | JWT, cookies, bcrypt |
+| Validation | `src/lib/schemas/` | Zod (`auth`, `rideGroup`) |
+| Métier | `src/services/` | `rideGroup`, `stats`, `auth` |
+| Données | `prisma/`, `src/lib/prisma.ts` | Modèle + client |
 
 ## Routes API
 
-| Route | Service / lib |
-|-------|----------------|
-| `GET /api/stations` | Prisma direct |
-| `GET/POST /api/ride-groups` | `rideGroupService` |
-| `POST /api/ride-groups/[id]/join` | `rideGroupService.joinRideGroup` |
-| `GET /api/stats` | `statsService` |
+| Route | Auth | Service |
+|-------|------|---------|
+| `POST /api/auth/register` | — | `authService.registerUser` |
+| `POST /api/auth/login` | — | `authService.authenticateUser` |
+| `POST /api/auth/logout` | — | clear cookie |
+| `GET /api/auth/me` | optionnel | session courante |
+| `GET /api/stations` | public | Prisma |
+| `GET /api/ride-groups` | public | `listRideGroups` |
+| `POST /api/ride-groups` | **JWT** | `createRideGroup` + `creatorId` token |
+| `POST /api/ride-groups/[id]/join` | **JWT** | `joinRideGroup` + `userId` token |
+| `GET /api/stats` | **JWT** | `getUserStats` |
 
-## Patterns utilisés
+## Patterns
 
-| Pattern | Usage |
-|---------|--------|
-| **Service layer** | Logique hors des `route.ts` |
-| **DTO / enrichissement** | `withRideMetrics` sur les balades |
-| **Validation déclarative** | Zod dans `src/lib/schemas` |
-| **Erreurs API centralisées** | `src/lib/apiErrors.ts` |
-| **Middleware transversal** | Logs + `x-request-id` |
+| Pattern | Fichiers |
+|---------|----------|
+| Service layer | `src/services/*` |
+| DTO enrichi | `withRideMetrics` |
+| Validation Zod | `src/lib/schemas/*` |
+| Erreurs API | `apiErrors.ts` (dont schéma BDD obsolète) |
+| Auth middleware | `middleware.ts` + `requireAuth` |
+| Cookie JWT httpOnly | `src/lib/auth/cookies.ts` |
 
-## Déploiement (MVP)
+## Variables d'environnement
+
+| Variable | Usage |
+|----------|--------|
+| `DATABASE_URL` | Prisma / PostgreSQL |
+| `JWT_SECRET` | Signature JWT (min. 16 car.) |
+
+## Déploiement
 
 ```mermaid
 flowchart LR
-  DC[docker compose] --> APP[conteneur app :3001]
-  DC --> DB[conteneur db PostgreSQL]
-  APP --> DB
-  GHA[GitHub Actions] --> LINT[lint]
-  GHA --> TEST[vitest]
-  GHA --> BUILD[next build]
+  DC[docker compose] --> APP[:3001]
+  DC --> DB[(PostgreSQL)]
+  GHA[GitHub Actions] --> lint test build
 ```
 
-- Image : `Dockerfile` + `scripts/docker-entrypoint.sh` (`prisma generate`, `db push`, seed, `npm start`)
-- Port hôte : **3001** → 3000 (évite conflit avec `npm run dev`)
+Entrypoint : `prisma generate` → `db push` → `seed` → `next start`.
 
-## Décisions liées
+## ADR
 
-- [ADR-001](./06-adr/ADR-001-postgresql-prisma.md) — PostgreSQL + Prisma
-- [ADR-002](./06-adr/ADR-002-next-app-router.md) — App Router
-- [ADR-003](./06-adr/ADR-003-mvp-sans-auth.md) — Pas d'auth au MVP
+- [ADR-001](./06-adr/ADR-001-postgresql-prisma.md)
+- [ADR-002](./06-adr/ADR-002-next-app-router.md)
+- [ADR-003](./06-adr/ADR-003-mvp-sans-auth.md) — historique
+- [ADR-004](./06-adr/ADR-004-jwt-auth.md) — **actif**
 
-## Évolutions prévues
+## Évolutions
 
-- Auth middleware + session/JWT
-- Couche repository si tests d'intégration BDD multipliés
-- Migrations Prisma en pipeline CI/CD prod
+- Refresh token, OAuth
+- Migrations Prisma CI/CD
+- Tests API auth + E2E

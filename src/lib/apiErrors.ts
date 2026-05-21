@@ -8,6 +8,22 @@ export function validationErrorResponse(error: ZodError) {
 
 export function prismaErrorResponse(error: unknown) {
   const err = error as { code?: string; message?: string };
+  const msg = typeof err.message === 'string' ? err.message : '';
+
+  if (
+    err.code === 'P2022' ||
+    msg.includes('does not exist') ||
+    msg.includes("n'existe pas") ||
+    msg.includes('colonne')
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          'Base de données non à jour. Exécutez : npx prisma db push puis npm run prisma:seed',
+      },
+      { status: 503 },
+    );
+  }
 
   if (err.code === 'P2025') {
     return NextResponse.json(

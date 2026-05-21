@@ -2,13 +2,19 @@ import { withRideMetrics } from '../lib/enrichRide';
 import { prisma } from '../lib/prisma';
 import type { CreateRideGroupInput } from '../lib/schemas/rideGroup';
 
+const userPublicSelect = {
+  id: true,
+  username: true,
+  email: true,
+} as const;
+
 const rideInclude = {
-  creator: true,
+  creator: { select: userPublicSelect },
   startStation: true,
   endStation: true,
   participants: {
     include: {
-      user: true,
+      user: { select: userPublicSelect },
     },
   },
 } as const;
@@ -21,18 +27,11 @@ export async function listRideGroups() {
   return rideGroups.map(withRideMetrics);
 }
 
-export async function createRideGroup(input: CreateRideGroupInput) {
-  const { title, departureTime, creatorId, startStationId, endStationId } = input;
-
-  await prisma.user.upsert({
-    where: { id: creatorId },
-    update: {},
-    create: {
-      id: creatorId,
-      username: `user${creatorId}`,
-      email: `user${creatorId}@example.com`,
-    },
-  });
+export async function createRideGroup(
+  input: CreateRideGroupInput,
+  creatorId: number,
+) {
+  const { title, departureTime, startStationId, endStationId } = input;
 
   return prisma.rideGroup.create({
     data: {

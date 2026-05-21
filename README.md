@@ -6,7 +6,7 @@ Application pour organiser des balades Vélib' à Paris : carte des stations, cr
 
 ## Stack
 
-Next.js 16 · React 19 · PostgreSQL · Prisma · Leaflet · TypeScript · Zod · Vitest
+Next.js 16 · React 19 · PostgreSQL · Prisma · JWT (jose) · bcrypt · Leaflet · TypeScript · Zod · Vitest
 
 ## Démarrage rapide (Docker — recommandé)
 
@@ -26,12 +26,12 @@ Ouvre [http://localhost:3001](http://localhost:3001) (Docker utilise le port **3
 ## Démarrage local (sans Docker)
 
 1. PostgreSQL avec une base `velib_db`.
-2. Copier `.env.example` vers `.env` et adapter `DATABASE_URL` (ex. `localhost:5432`).
+2. Copier `.env.example` vers `.env` et adapter `DATABASE_URL` et `JWT_SECRET` (min. 16 caractères).
 3. Commandes :
 
 ```bash
 npm install          # postinstall lance prisma generate automatiquement
-npx prisma db push
+npm run db:push      # synchronise le schéma (colonne passwordHash, etc.)
 npm run prisma:seed
 npm run dev          # regénère le client Prisma puis démarre Next.js
 ```
@@ -46,27 +46,41 @@ npm run dev          # regénère le client Prisma puis démarre Next.js
 | `npm run lint` | ESLint |
 | `npm test` | Tests unitaires (Vitest) |
 | `npm run prisma:generate` | Génère le client Prisma (aussi avant `dev` / `build`) |
-| `npm run prisma:seed` | Import stations Velib + user démo (id=1) |
+| `npm run prisma:seed` | Import stations Velib + compte démo |
+
+## Authentification (JWT)
+
+- **Inscription :** [/register](http://localhost:3000/register)
+- **Connexion :** [/login](http://localhost:3000/login)
+- **Compte démo (seed) :** `demo@example.com` / `demo1234`
+- JWT en cookie **httpOnly** `auth_token` ; secret `JWT_SECRET` dans `.env`
+- Actions protégées : créer une balade, rejoindre, stats (l’id utilisateur vient du token, pas du body)
+
+| Route | Auth |
+|-------|------|
+| `GET /api/stations`, `GET /api/ride-groups` | Public |
+| `POST /api/ride-groups`, `POST .../join`, `GET /api/stats` | JWT requis |
+| `POST /api/auth/register`, `login`, `logout`, `GET /api/auth/me` | Auth |
 
 ## Architecture
 
 ```
-app/              Pages et API Routes (Next.js App Router)
-src/lib/          Métier (rideMetrics, enrichRide, schémas Zod)
-src/services/     Services (rideGroup, stats)
+app/              Pages, login/register, API Routes
+src/lib/auth/     JWT (jose), bcrypt, cookies, requireAuth
+src/services/     rideGroup, stats, auth
 prisma/           Schéma PostgreSQL + seed
-middleware.ts     Logs API + x-request-id
+middleware.ts     JWT sur routes API sensibles + x-request-id
 ```
 
-Décisions documentées : [`docs/adr/`](docs/adr/).
+Décisions documentées : [`docs/adr/`](docs/adr/) (dont [004-jwt-auth](docs/adr/004-jwt-auth.md)).
 
 **Kickoff Pack (conception cours) :** [`docs/00-kickoff-pack/`](docs/00-kickoff-pack/) — brief, scope, domaine, ERD, architecture, ADR, dette, DoD.
 
-## MVP & dette assumée
+## Dette restante
 
-- Utilisateur fixe `userId = 1` (pas d’auth JWT au MVP).
 - Distance estimée (Haversine × 1,25), pas de routing OSM.
 - `prisma db push` (pas de migrations versionnées en prod pour l’instant).
+- Pas de refresh token / OAuth / rate limit login.
 
 ## Tests & CI
 

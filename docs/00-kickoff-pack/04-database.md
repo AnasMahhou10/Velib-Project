@@ -6,38 +6,27 @@
 |---------|-------|
 | SGBD | **PostgreSQL 16** |
 | ORM | **Prisma** (`@prisma/client`) |
-| Justification | Relations FK (User, Station, RideGroup, Participation), intégrité, écosystème Next.js |
+| Justification | Relations FK, intégrité, auth (`User.passwordHash`) |
 
 Voir [ADR-001](./06-adr/ADR-001-postgresql-prisma.md).
 
 ## 2. ERD
 
-Diagramme logique aligné sur [`prisma/schema.prisma`](../../prisma/schema.prisma).
-
-### Image
+Diagramme aligné sur [`prisma/schema.prisma`](../../prisma/schema.prisma).
 
 ![ERD Velib Ride Planner](./images/erd.png)
 
-Source éditable : [`images/erd.puml`](./images/erd.puml) — régénérer sur [plantuml.com](https://www.plantuml.com/plantuml/uml/) ou via Kroki si le PNG est mis à jour.
+- Source PlantUML : [`images/erd.puml`](./images/erd.puml)
+- Régénérer : [plantuml.com](https://www.plantuml.com/plantuml/uml/) ou `npm run db:push` (hors scope — utiliser Kroki en dev)
 
-### Source PlantUML
-
-Fichier versionné : [`images/erd.puml`](./images/erd.puml)
-
-```plantuml
-@startuml
-' Voir images/erd.puml pour le diagramme complet
-@enduml
-```
-
-### Relations (résumé)
+### Relations
 
 | Relation | Cardinalité | FK |
 |----------|-------------|-----|
-| User → RideGroup (créateur) | 1 — N | `RideGroup.creatorId` |
-| Station → RideGroup (départ) | 1 — N | `RideGroup.startStationId` |
-| Station → RideGroup (arrivée) | 1 — 0..N | `RideGroup.endStationId` (nullable) |
-| User ↔ RideGroup (participation) | N — N | table `Participation` |
+| User → RideGroup (créateur) | 1 — N | `creatorId` |
+| Station → RideGroup (départ) | 1 — N | `startStationId` |
+| Station → RideGroup (arrivée) | 1 — 0..N | `endStationId` (nullable) |
+| User ↔ RideGroup | N — N | `Participation` |
 
 ## 3. Dictionnaire de données
 
@@ -47,59 +36,65 @@ Fichier versionné : [`images/erd.puml`](./images/erd.puml)
 |---------|----------|-------------|-------------|
 | id | SERIAL | PK | Identifiant |
 | username | VARCHAR | UNIQUE, NOT NULL | Pseudo |
-| email | VARCHAR | UNIQUE, NOT NULL | Email |
+| email | VARCHAR | UNIQUE, NOT NULL | Email (lowercase en app) |
+| passwordHash | VARCHAR | NOT NULL | bcrypt — **jamais renvoyé par l’API** |
 
 ### Station
 
 | Colonne | Type SQL | Contraintes | Description |
 |---------|----------|-------------|-------------|
-| id | INTEGER | PK | Code station OpenData (`stationcode`) |
-| name | VARCHAR | NOT NULL | Nom affiché |
-| lat | DOUBLE PRECISION | NOT NULL | Latitude WGS84 |
-| lng | DOUBLE PRECISION | NOT NULL | Longitude WGS84 |
+| id | INTEGER | PK | Code OpenData (`stationcode`) |
+| name | VARCHAR | NOT NULL | Nom |
+| lat | DOUBLE PRECISION | NOT NULL | Latitude |
+| lng | DOUBLE PRECISION | NOT NULL | Longitude |
 
 ### RideGroup
 
 | Colonne | Type SQL | Contraintes | Description |
 |---------|----------|-------------|-------------|
-| id | SERIAL | PK | Identifiant balade |
+| id | SERIAL | PK | Balade |
 | title | VARCHAR | NOT NULL | Titre |
-| departureTime | TIMESTAMPTZ | NOT NULL | Date/heure départ |
-| creatorId | INTEGER | FK → User.id | Créateur |
-| startStationId | INTEGER | FK → Station.id | Station départ |
-| endStationId | INTEGER | FK → Station.id, NULL | Station arrivée (optionnel) |
+| departureTime | TIMESTAMPTZ | NOT NULL | Départ |
+| creatorId | INTEGER | FK → User | Créateur (session JWT) |
+| startStationId | INTEGER | FK → Station | Départ |
+| endStationId | INTEGER | FK → Station, NULL | Arrivée |
 
 ### Participation
 
 | Colonne | Type SQL | Contraintes | Description |
 |---------|----------|-------------|-------------|
-| userId | INTEGER | PK, FK → User.id | Participant |
-| rideGroupId | INTEGER | PK, FK → RideGroup.id | Balade |
+| userId | INTEGER | PK, FK → User | Participant (session JWT) |
+| rideGroupId | INTEGER | PK, FK → RideGroup | Balade |
 
 ## 4. Index et intégrité
 
 | Type | Détail |
 |------|--------|
-| PK | `User.id`, `Station.id`, `RideGroup.id`, `Participation(userId, rideGroupId)` |
+| PK | Tables ci-dessus + composite `Participation` |
 | UNIQUE | `User.username`, `User.email` |
-| FK | Toutes les relations Prisma ci-dessus |
-| Index explicites MVP | Via contraintes UNIQUE Prisma uniquement |
+| FK | Toutes les relations Prisma |
 
-## 5. Anti-patterns évités
+## 5. Sécurité données
 
-- Pas de champ `tags` en CSV sur `RideGroup`
-- Pas de duplication des coordonnées station dans `RideGroup` (normalisation via FK)
-- Pas de table « fourre-tout » événements génériques
+- `passwordHash` stocké uniquement en BDD
+- API : `select` public `{ id, username, email }` sur `creator` / `participants.user`
+- Pas de mot de passe en clair, pas de JWT en `localStorage` (cookie httpOnly)
 
-## 6. Dette schéma (voir registre 07)
+## 6. Anti-patterns évités
 
-- Pas de `created_at` / `updated_at`
-- Pas de soft delete (`deleted_at`)
+- Pas de `userId` envoyé par le client sur create/join/stats
+- Pas de tags CSV, pas de duplication coords dans `RideGroup`
+
+## 7. Dette schéma
+
+- Pas de `created_at` / `updated_at` / `deleted_at`
 - Pas de colonne `status` (dérivé de `departureTime`)
-- Synchronisation schéma via `prisma db push` (pas d'historique migrations prod)
+- `prisma db push` (pas migrations versionnées prod)
 
-## 7. Seed
+## 8. Seed et maintenance
 
-- Script : `prisma/seed.cjs`
-- Stations : API OpenData Paris (~500 enregistrements)
-- User démo : `id = 1`, username/email générés si création via API
+| Script | Rôle |
+|--------|------|
+| `prisma/seed.cjs` | Stations OpenData + user démo (`demo@example.com` / `demo1234`) |
+| `scripts/fix-password-hash.cjs` | Corrige `passwordHash` NULL → `npm run db:fix` |
+| `prisma/sql/add-password-hash.sql` | SQL manuel pgAdmin si besoin |

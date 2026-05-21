@@ -1,0 +1,63 @@
+@startuml Velib_ERD
+!theme plain
+skinparam linetype ortho
+skinparam classBackgroundColor #F8FAFC
+skinparam classBorderColor #0369A1
+
+title ERD — Velib Ride Planner\nPostgreSQL · Prisma (avec auth JWT)
+
+entity "User" as user {
+  * **id** : INT <<PK>>
+  --
+  * username : VARCHAR <<UK>>
+  * email : VARCHAR <<UK>>
+  * passwordHash : VARCHAR
+}
+
+entity "Station" as station {
+  * **id** : INT <<PK>>
+  --
+  * name : VARCHAR
+  * lat : FLOAT
+  * lng : FLOAT
+}
+
+entity "RideGroup" as ride {
+  * **id** : INT <<PK>>
+  --
+  * title : VARCHAR
+  * departureTime : TIMESTAMPTZ
+  * creatorId : INT <<FK>>
+  * startStationId : INT <<FK>>
+  o endStationId : INT <<FK>> <<nullable>>
+}
+
+entity "Participation" as part {
+  * **userId** : INT <<PK, FK>>
+  * **rideGroupId** : INT <<PK, FK>>
+}
+
+user ||--o{ ride : "crée (creatorId)"
+station ||--o{ ride : "départ (startStationId)"
+station |o--o{ ride : "arrivée (endStationId)"
+
+user ||--o{ part : "s'inscrit"
+ride ||--o{ part : "a des participants"
+
+note right of user
+  passwordHash = bcrypt
+  Jamais exposé en API
+end note
+
+note right of station
+  **~500 stations**
+  Seed OpenData Paris
+end note
+
+note bottom of ride
+  Statut implicite :
+  à venir / passée
+  (departureTime)
+end note
+
+@enduml

@@ -2,6 +2,7 @@
 
 const { PrismaClient } = require("@prisma/client");
 const axios = require("axios");
+const bcrypt = require("bcryptjs");
 
 const prisma = new PrismaClient();
 
@@ -56,18 +57,20 @@ async function main() {
     console.log(`Import de ${stationsData.length} stations Velib terminé.`);
   }
 
-  // Crée un utilisateur de démo avec id 1 si inexistant
+  const demoPasswordHash = await bcrypt.hash("demo1234", 10);
+
   await prisma.user.upsert({
     where: { id: 1 },
-    update: {},
+    update: { passwordHash: demoPasswordHash },
     create: {
       id: 1,
       username: "demo",
       email: "demo@example.com",
+      passwordHash: demoPasswordHash,
     },
   });
 
-  console.log("Utilisateur de démo (id=1) prêt.");
+  console.log("Utilisateur de démo (id=1) prêt — login: demo@example.com / demo1234");
 }
 
 main()

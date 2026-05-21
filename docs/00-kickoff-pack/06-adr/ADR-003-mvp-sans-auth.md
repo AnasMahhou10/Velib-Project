@@ -2,7 +2,7 @@
 
 ## Statut
 
-Accepté (dette documentée)
+Supersédé par [ADR-004](./ADR-004-jwt-auth.md) — conservé pour historique du MVP
 
 ## Contexte
 

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { AuthProvider } from "@/components/AuthProvider";
 import ChunkLoadRecovery from "@/components/ChunkLoadRecovery";
 import "./globals.css";
 import "leaflet/dist/leaflet.css";
@@ -42,7 +43,7 @@ export default function RootLayout({
         style={pageBackground}
       >
         <ChunkLoadRecovery />
-        {children}
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

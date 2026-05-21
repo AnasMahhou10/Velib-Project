@@ -3,6 +3,8 @@
 import dynamic from 'next/dynamic';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import AppNavLink from '@/components/AppNavLink';
+import AuthNav from '@/components/AuthNav';
+import { useAuth } from '@/components/AuthProvider';
 import type { MapStation } from '@/components/StationsMap';
 import DepartureDateTimePicker from '@/components/DepartureDateTimePicker';
 
@@ -208,12 +210,15 @@ export default function Home() {
         <h1 className="text-xl font-semibold tracking-tight">
           Velib Ride Planner
         </h1>
-        <AppNavLink
-          href="/rides"
-          className="rounded-full border border-sky-300/35 bg-sky-950/50 px-4 py-1 text-sm font-medium text-sky-100 backdrop-blur-sm transition-colors hover:bg-sky-900/60"
-        >
-          Mes balades
-        </AppNavLink>
+        <div className="flex items-center gap-3">
+          <AppNavLink
+            href="/rides"
+            className="rounded-full border border-sky-300/35 bg-sky-950/50 px-4 py-1 text-sm font-medium text-sky-100 backdrop-blur-sm transition-colors hover:bg-sky-900/60"
+          >
+            Mes balades
+          </AppNavLink>
+          <AuthNav />
+        </div>
       </header>
 
       <main className="flex flex-1 flex-col lg:flex-row">
@@ -312,8 +317,6 @@ export default function Home() {
   );
 }
 
-const CURRENT_USER_ID = 1;
-
 type RideFormProps = {
   mode: 'start' | 'end';
   selectedStart: Station | null;
@@ -329,6 +332,7 @@ function RideForm({
   selectedArrondissement,
   onModeChange,
 }: RideFormProps) {
+  const { user, loading: authLoading } = useAuth();
   const [title, setTitle] = useState('');
   const [departureTime, setDepartureTime] = useState('');
   const [stationIdInput, setStationIdInput] = useState('');
@@ -355,6 +359,12 @@ function RideForm({
     setMessage(null);
     setError(null);
 
+    if (!user) {
+      setError('Connecte-toi pour créer une balade.');
+      setSubmitting(false);
+      return;
+    }
+
     try {
       const startStationId = Number(stationIdInput);
       const endStationId = Number(endStationIdInput);
@@ -370,10 +380,10 @@ function RideForm({
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
           title,
           departureTime: new Date(departureTime).toISOString(),
-          creatorId: CURRENT_USER_ID,
           startStationId,
           endStationId,
         }),
@@ -501,9 +511,22 @@ function RideForm({
         </div>
       )}
 
+      {!authLoading && !user && (
+        <p className="text-xs text-amber-200/90">
+          <AppNavLink href="/login" className="underline hover:text-amber-100">
+            Connecte-toi
+          </AppNavLink>{' '}
+          ou{' '}
+          <AppNavLink href="/register" className="underline hover:text-amber-100">
+            inscris-toi
+          </AppNavLink>{' '}
+          pour créer une balade.
+        </p>
+      )}
+
       <button
         type="submit"
-        disabled={submitting}
+        disabled={submitting || authLoading || !user}
         className="flex w-full items-center justify-center rounded-md bg-sky-500 px-3 py-2 text-xs font-semibold text-sky-950 shadow hover:bg-sky-400 disabled:cursor-not-allowed disabled:opacity-60 transition-colors"
       >
         {submitting ? 'Création en cours...' : 'Créer la balade'}

@@ -12,6 +12,7 @@ jobs:
     # Requis par prisma.config.ts (postinstall = prisma generate pendant npm ci)
     env:
       DATABASE_URL: postgresql://velib:velib@localhost:5432/velib_db
+      JWT_SECRET: ci-test-jwt-secret-minimum-32-characters-long
     steps:
       - uses: actions/checkout@v4
 

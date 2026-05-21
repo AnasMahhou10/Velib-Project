@@ -2,7 +2,7 @@
 
 ## Statut
 
-Accepté (dette documentée)
+Supersédé par [004-jwt-auth.md](./004-jwt-auth.md)
 
 ## Contexte
 
