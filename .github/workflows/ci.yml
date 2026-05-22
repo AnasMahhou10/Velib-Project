@@ -62,13 +62,13 @@ jobs:
         run: docker compose up -d --wait --wait-timeout 600
 
       - name: Smoke test — API stations
-        run: curl -fsS http://localhost:3001/api/stations
+        run: curl -fsS http://localhost:3000/api/stations
 
       - name: Smoke test — API balades
-        run: curl -fsS http://localhost:3001/api/ride-groups
+        run: curl -fsS http://localhost:3000/api/ride-groups
 
       - name: Smoke test — page login
-        run: curl -fsS -o /dev/null -w "%{http_code}" http://localhost:3001/login | grep -q 200
+        run: curl -fsS -o /dev/null -w "%{http_code}" http://localhost:3000/login | grep -q 200
 
       - name: Arrêter les conteneurs
         if: always()

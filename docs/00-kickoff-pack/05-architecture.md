@@ -91,7 +91,7 @@ flowchart TB
 
 ```mermaid
 flowchart LR
-  DC["docker compose"] --> APP["app port 3001"]
+  DC["docker compose"] --> APP["app port 3000"]
   DC --> DB[(PostgreSQL)]
   GHA["GitHub Actions"] --> CI["lint test build"]
 ```

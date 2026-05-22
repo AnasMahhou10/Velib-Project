@@ -37,7 +37,7 @@ Organiser une balade Vélib' entre amis à Paris est fastidieux : trouver une st
 
 ## Critères de succès (MVP)
 
-- [x] `git clone` + `docker compose up --build` → app sur port **3001**
+- [x] `git clone` + `docker compose up --build` → app sur [http://localhost:3000](http://localhost:3000)
 - [x] Inscription / connexion fonctionnelles
 - [x] Carte + création balade (connecté)
 - [x] `/rides` : lister, rejoindre, stats

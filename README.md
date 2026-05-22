@@ -8,60 +8,76 @@ Application pour organiser des balades Vélib' à Paris : carte des stations, cr
 
 Next.js 16 · React 19 · PostgreSQL · Prisma · JWT (jose) · bcrypt · Leaflet · TypeScript · Zod · Vitest
 
-## Démarrage rapide (Docker — recommandé)
+## Démarrage (Docker — recommandé)
+
+Une seule commande après clone ou `git pull` :
 
 ```bash
 git clone https://github.com/AnasMahhou10/Velib-Project.git
 cd Velib-Project
-cp .env.example .env
-npm run docker:up
+docker compose up --build
 ```
 
-Ouvre [http://localhost:3001](http://localhost:3001) (Docker utilise le port **3001** pour éviter le conflit avec `npm run dev` sur 3000).
+- **URL :** [http://localhost:3000](http://localhost:3000) (Docker et dev local utilisent le même port)
+- **Arrière-plan :** `docker compose up -d --build` ou `npm run docker:up`
+- **Arrêt :** `docker compose down` ou `npm run docker:down`
 
-### Mettre à jour l’app après un `git pull`
+Le conteneur `app` attend PostgreSQL, applique le schéma (`prisma db push`), lance le **seed** (stations OpenData + compte démo), puis démarre Next.js. **Internet requis** au premier lancement (API OpenData Paris).
 
-**GitHub Actions rebuild l’image sur chaque push** (job CI **Docker**), mais **ça ne met pas à jour ton PC automatiquement**. En local, rebuild obligatoire :
+| Commande npm | Équivalent |
+|--------------|------------|
+| `npm run docker` | `docker compose up --build` (logs au premier plan) |
+| `npm run docker:up` | `docker compose up -d --build` |
+| `npm run docker:down` | `docker compose down` |
+| `npm run docker:refresh` | Rebuild complet après gros changements |
+
+### Après un `git push` / `git pull`
+
+```bash
+docker compose up --build
+```
+
+GitHub Actions rebuild et teste l’image sur chaque push ; **en local**, il faut relancer la commande ci-dessus pour prendre le nouveau code (pas de mise à jour automatique du conteneur).
+
+Rebuild forcé (cache Docker) :
 
 ```bash
 npm run docker:refresh
-# équivalent : docker compose down && docker compose build --no-cache app && docker compose up -d
 ```
 
-| Commande | Usage |
-|----------|--------|
-| `npm run docker:up` | Démarre avec **rebuild** si le code a changé |
-| `npm run docker:build` | Rebuild image seule (`--no-cache`) |
-| `npm run docker:refresh` | Stop + rebuild complet + redémarrage |
+Réinitialiser la base Docker : `docker compose down -v` puis `docker compose up --build`.
 
-- Premier lancement : ~5–8 min (build + seed OpenData Paris).
-- Le seed nécessite **Internet** (API OpenData Paris).
-- BDD Docker à réinitialiser : `docker compose down -v` puis `npm run docker:up`.
-- Sans Docker : `npm run dev` → [http://localhost:3000](http://localhost:3000).
+> Ne pas lancer `npm run dev` en même temps que Docker : les deux écoutent le port **3000**.
 
 ## Démarrage local (sans Docker)
+
+Pour coder avec rechargement à chaud, Postgres doit tourner en local (pas le service `db` de Compose).
 
 1. PostgreSQL avec une base `velib_db`.
 2. Copier `.env.example` vers `.env` et adapter `DATABASE_URL` et `JWT_SECRET` (min. 16 caractères).
 3. Commandes :
 
 ```bash
-npm install          # postinstall lance prisma generate automatiquement
-npm run db:push      # synchronise le schéma (colonne passwordHash, etc.)
+npm install
+npm run db:push
 npm run prisma:seed
-npm run dev          # regénère le client Prisma puis démarre Next.js
+npm run dev
 ```
+
+→ [http://localhost:3000](http://localhost:3000)
 
 ## Scripts
 
 | Commande | Description |
 |----------|-------------|
-| `npm run dev` | Serveur de développement |
+| `npm run docker` | Stack Docker (build + démarrage) |
+| `npm run dev` | Serveur de développement (hors Docker) |
 | `npm run build` | Build production |
 | `npm run start` | Lance le build |
 | `npm run lint` | ESLint |
 | `npm test` | Tests unitaires (Vitest) |
-| `npm run prisma:generate` | Génère le client Prisma (aussi avant `dev` / `build`) |
+| `npm run db:push` | Synchronise le schéma Prisma |
+| `npm run db:fix` | Corrige `passwordHash` NULL + `db push` |
 | `npm run prisma:seed` | Import stations Velib + compte démo |
 
 ## Authentification (JWT)
@@ -69,7 +85,7 @@ npm run dev          # regénère le client Prisma puis démarre Next.js
 - **Inscription :** [/register](http://localhost:3000/register)
 - **Connexion :** [/login](http://localhost:3000/login)
 - **Compte démo (seed) :** `demo@example.com` / `demo1234`
-- JWT en cookie **httpOnly** `auth_token` ; secret `JWT_SECRET` dans `.env`
+- JWT en cookie **httpOnly** `auth_token` ; secret `JWT_SECRET` dans `.env` (optionnel pour Docker : valeur par défaut dans `docker-compose.yml`)
 - Actions protégées : créer une balade, rejoindre, stats (l’id utilisateur vient du token, pas du body)
 
 | Route | Auth |
@@ -86,6 +102,7 @@ src/lib/auth/     JWT (jose), bcrypt, cookies, requireAuth
 src/services/     rideGroup, stats, auth
 prisma/           Schéma PostgreSQL + seed
 middleware.ts     JWT sur routes API sensibles + x-request-id
+scripts/          docker-entrypoint.sh (db push + seed au démarrage)
 ```
 
 Décisions documentées : [`docs/adr/`](docs/adr/) (dont [004-jwt-auth](docs/adr/004-jwt-auth.md)).
@@ -108,7 +125,7 @@ npm run lint
 GitHub Actions sur chaque **push** (`/.github/workflows/ci.yml`) :
 - **Qualité** — ESLint + build Next.js
 - **Les tests** — Vitest
-- **Docker** — `docker compose build --no-cache` + stack + smoke tests (rebuild à chaque push)
+- **Docker** — `docker compose build` + stack + smoke tests sur **http://localhost:3000**
 
 ## Licence
 
