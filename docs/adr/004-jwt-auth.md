@@ -12,7 +12,7 @@ Le MVP utilisait `CURRENT_USER_ID = 1` et acceptait `userId` / `creatorId` depui
 
 - **Inscription / connexion** : `POST /api/auth/register`, `POST /api/auth/login`
 - **Mot de passe** : bcrypt (`passwordHash` sur `User`)
-- **JWT** : signé HS256 via `jose`, stocké en cookie **`auth_token`** httpOnly, `sameSite: lax`, 7 jours
+- **JWT** : signé HS256 via `jose`, stocké en cookie **`auth_token`** httpOnly, `sameSite: lax`, **6 heures**
 - **Secret** : variable d'environnement `JWT_SECRET` (min. 16 caractères)
 - **Routes protégées** (middleware + `requireAuth`) :
   - `POST /api/ride-groups` — `creatorId` = `sub` du JWT

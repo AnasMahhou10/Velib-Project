@@ -85,7 +85,7 @@ npm run dev
 - **Inscription :** [/register](http://localhost:3000/register)
 - **Connexion :** [/login](http://localhost:3000/login)
 - **Compte démo (seed) :** `demo@example.com` / `demo1234`
-- JWT en cookie **httpOnly** `auth_token` ; secret `JWT_SECRET` dans `.env` (optionnel pour Docker : valeur par défaut dans `docker-compose.yml`)
+- JWT en cookie **httpOnly** `auth_token` (expiration **6 h**) ; secret `JWT_SECRET` dans `.env` (optionnel pour Docker : valeur par défaut dans `docker-compose.yml`)
 - Actions protégées : créer une balade, rejoindre, stats (l’id utilisateur vient du token, pas du body)
 
 | Route | Auth |
