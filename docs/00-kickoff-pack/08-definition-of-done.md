@@ -5,6 +5,7 @@ Checklist Kickoff Pack + MVP — **à jour avec auth JWT** (mai 2026).
 ## Kickoff Pack (8 livrables)
 
 - [x] `01-project-brief.md`
+- [x] `09-user-stories.md` — format « En tant que… je veux… afin de… »
 - [x] `02-product-scope.md`
 - [x] `03-domain-model.md`
 - [x] `04-database.md` + ERD `passwordHash`

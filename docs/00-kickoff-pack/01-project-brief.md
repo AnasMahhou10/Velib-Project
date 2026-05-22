@@ -43,6 +43,20 @@ Organiser une balade Vélib' entre amis à Paris est fastidieux : trouver une st
 - [x] `/rides` : lister, rejoindre, stats
 - [x] CI : lint + tests + build (+ `JWT_SECRET` en CI)
 
+## User stories
+
+Le brief est décliné en user stories au format cours :
+
+> En tant que **[rôle]**, je veux **[action]**, afin de **[bénéfice]**.
+
+Voir le document complet : **[09-user-stories.md](./09-user-stories.md)** (14 stories MVP + backlog).
+
+Exemples :
+
+- En tant que **membre**, je veux **créer une balade**, afin d’**organiser une sortie** entre amis.
+- En tant que **membre**, je veux **rejoindre une balade**, afin de **participer** avec d’autres cyclistes.
+- En tant que **visiteur**, je veux **me connecter**, afin d’**accéder à mes balades et statistiques**.
+
 ## Hors scope (brief)
 
 Paiement, app mobile native, modération admin, chat temps réel, OAuth / refresh token (évolution post-MVP).

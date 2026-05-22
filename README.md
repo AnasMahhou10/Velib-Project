@@ -74,7 +74,7 @@ middleware.ts     JWT sur routes API sensibles + x-request-id
 
 Décisions documentées : [`docs/adr/`](docs/adr/) (dont [004-jwt-auth](docs/adr/004-jwt-auth.md)).
 
-**Kickoff Pack (conception cours) :** [`docs/00-kickoff-pack/`](docs/00-kickoff-pack/) — brief, scope, domaine, ERD, architecture, ADR, dette, DoD.
+**Kickoff Pack (conception cours) :** [`docs/00-kickoff-pack/`](docs/00-kickoff-pack/) — brief, **user stories**, scope, domaine, ERD, architecture, ADR, dette, DoD.
 
 ## Dette restante
 

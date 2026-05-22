@@ -11,6 +11,7 @@ Dossier de conception (cours [Projet technique — Chapitre 1](https://ic-etagso
 | # | Fichier | Contenu |
 |---|---------|---------|
 | 1 | [01-project-brief.md](./01-project-brief.md) | Brief projet |
+| — | [09-user-stories.md](./09-user-stories.md) | **User stories** (format cours) |
 | 2 | [02-product-scope.md](./02-product-scope.md) | Périmètre MoSCoW + auth |
 | 3 | [03-domain-model.md](./03-domain-model.md) | Métier, RBAC, BR, API |
 | 4 | [04-database.md](./04-database.md) | ERD + dictionnaire |
