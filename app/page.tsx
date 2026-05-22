@@ -309,7 +309,6 @@ export default function Home() {
             selectedStart={startStation}
             selectedEnd={endStation}
             selectedArrondissement={selectedArrondissement}
-            onModeChange={setMode}
           />
         </section>
       </main>
@@ -322,7 +321,6 @@ type RideFormProps = {
   selectedStart: Station | null;
   selectedEnd: Station | null;
   selectedArrondissement: string;
-  onModeChange: (mode: 'start' | 'end') => void;
 };
 
 function RideForm({
@@ -330,7 +328,6 @@ function RideForm({
   selectedStart,
   selectedEnd,
   selectedArrondissement,
-  onModeChange,
 }: RideFormProps) {
   const { user, loading: authLoading } = useAuth();
   const [title, setTitle] = useState('');
