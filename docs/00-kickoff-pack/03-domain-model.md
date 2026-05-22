@@ -40,8 +40,8 @@ Auth : [ADR-004](./06-adr/ADR-004-jwt-auth.md) — cookie `auth_token`, pas de t
 ```mermaid
 sequenceDiagram
   participant U as Utilisateur
-  participant UI as /register ou /login
-  participant API as /api/auth/*
+  participant UI as Pages auth
+  participant API as API auth
   participant DB as PostgreSQL
 
   U->>UI: formulaire
@@ -57,8 +57,8 @@ sequenceDiagram
 stateDiagram-v2
   [*] --> Draft: carte
   Draft --> Created: POST ride-groups JWT
-  Created --> Upcoming: departureTime > now
-  Upcoming --> Past: date passée
+  Created --> Upcoming: date future
+  Upcoming --> Past: date passee
 ```
 
 ## Machines à états — Participation

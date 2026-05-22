@@ -12,7 +12,7 @@
 | Rejoindre | `POST /api/ride-groups/[id]/join` (JWT) | Fait |
 | Stats personnelles | `GET /api/stats` (JWT) | Fait |
 | BDD + seed | ~500 stations + compte démo | Fait |
-| Docker + CI | Compose, GitHub Actions, `JWT_SECRET` | Fait |
+| Docker + CI | Compose + job CI **Docker** (build, smoke API) | Fait |
 
 ## SHOULD (post-MVP proche)
 
@@ -43,13 +43,13 @@
 
 ```mermaid
 flowchart LR
-  R[/register] --> L[JWT cookie]
-  LN[/login] --> L
-  L --> A[Carte /]
-  A --> B[Créer balade JWT]
-  B --> C[/rides]
-  C --> D[Rejoindre JWT]
-  C --> E[Stats JWT]
+  R["Inscription"] --> L["Session JWT"]
+  LN["Connexion"] --> L
+  L --> A["Carte"]
+  A --> B["Créer balade"]
+  B --> C["Liste balades"]
+  C --> D["Rejoindre"]
+  C --> E["Statistiques"]
 ```
 
 ## Compte démo (seed)

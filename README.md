@@ -89,7 +89,10 @@ npm test
 npm run lint
 ```
 
-GitHub Actions : lint + tests + build sur chaque push (`/.github/workflows/ci.yml`).
+GitHub Actions sur chaque push (`/.github/workflows/ci.yml`) :
+- **Qualité** — ESLint + build Next.js
+- **Les tests** — Vitest
+- **Docker** — `docker compose build`, démarrage stack, smoke tests API
 
 ## Licence
 

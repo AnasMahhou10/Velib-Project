@@ -45,3 +45,31 @@ jobs:
 
       - name: Tests unitaires Vitest
         run: npm test
+
+  docker:
+    name: Docker
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      JWT_SECRET: ci-docker-jwt-secret-minimum-32-chars
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image Docker
+        run: docker compose build app
+
+      - name: Démarrer PostgreSQL et app (seed + healthcheck)
+        run: docker compose up -d --wait --wait-timeout 600
+
+      - name: Smoke test — API stations
+        run: curl -fsS http://localhost:3001/api/stations
+
+      - name: Smoke test — API balades
+        run: curl -fsS http://localhost:3001/api/ride-groups
+
+      - name: Smoke test — page login
+        run: curl -fsS -o /dev/null -w "%{http_code}" http://localhost:3001/login | grep -q 200
+
+      - name: Arrêter les conteneurs
+        if: always()
+        run: docker compose down -v

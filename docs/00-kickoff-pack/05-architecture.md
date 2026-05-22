@@ -10,14 +10,14 @@ Monorepo **Next.js 16** : UI React, API REST, auth JWT, services métier, Prisma
 flowchart TB
   subgraph Client
     U[Utilisateur]
-    FE[app/ pages]
-    AUTHUI[login register AuthNav]
+    FE["Pages app"]
+    AUTHUI["AuthNav login register"]
     MAP[StationsMap]
   end
 
   subgraph NextServer["Next.js"]
-    API[app/api]
-    AUTHLIB[src/lib/auth jose bcrypt]
+    API["API routes"]
+    AUTHLIB["auth JWT bcrypt"]
     MW[middleware JWT guard]
     SVC[src/services]
     ZOD[src/lib/schemas]
@@ -91,9 +91,9 @@ flowchart TB
 
 ```mermaid
 flowchart LR
-  DC[docker compose] --> APP[:3001]
+  DC["docker compose"] --> APP["app port 3001"]
   DC --> DB[(PostgreSQL)]
-  GHA[GitHub Actions] --> lint test build
+  GHA["GitHub Actions"] --> CI["lint test build"]
 ```
 
 Entrypoint : `prisma generate` → `db push` → `seed` → `next start`.
