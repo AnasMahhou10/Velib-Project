@@ -43,13 +43,13 @@
 
 ```mermaid
 flowchart LR
-  R["Inscription"] --> L["Session JWT"]
-  LN["Connexion"] --> L
-  L --> A["Carte"]
-  A --> B["Créer balade"]
-  B --> C["Liste balades"]
-  C --> D["Rejoindre"]
-  C --> E["Statistiques"]
+  register["Inscription"] --> session["Session JWT"]
+  login["Connexion"] --> session
+  session --> carte["Carte"]
+  carte --> creer["Creer balade"]
+  creer --> liste["Liste balades"]
+  liste --> rejoindre["Rejoindre"]
+  liste --> stats["Statistiques"]
 ```
 
 ## Compte démo (seed)
