@@ -2,6 +2,9 @@ node_modules
 .next
 .git
 .env
-.env.local
-*.md
+.env.*
+!.env.example
 coverage
+*.md
+.cursor
+terminals
