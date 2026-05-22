@@ -6,13 +6,14 @@ on:
   pull_request:
     branches: [main, master]
 
+env:
+  DATABASE_URL: postgresql://velib:velib@localhost:5432/velib_db
+  JWT_SECRET: ci-test-jwt-secret-minimum-32-characters-long
+
 jobs:
   quality:
+    name: Qualité
     runs-on: ubuntu-latest
-    # Requis par prisma.config.ts (postinstall = prisma generate pendant npm ci)
-    env:
-      DATABASE_URL: postgresql://velib:velib@localhost:5432/velib_db
-      JWT_SECRET: ci-test-jwt-secret-minimum-32-characters-long
     steps:
       - uses: actions/checkout@v4
 
@@ -23,8 +24,24 @@ jobs:
 
       - run: npm ci
 
-      - run: npm run lint
+      - name: ESLint
+        run: npm run lint
 
-      - run: npm test
+      - name: Build production Next.js
+        run: npm run build
 
-      - run: npm run build
+  les-tests:
+    name: Les tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Tests unitaires Vitest
+        run: npm test
