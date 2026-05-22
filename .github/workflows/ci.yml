@@ -55,8 +55,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build image Docker
-        run: docker compose build app
+      - name: Build image Docker (sans cache — comme un clone frais)
+        run: docker compose build --no-cache app
 
       - name: Démarrer PostgreSQL et app (seed + healthcheck)
         run: docker compose up -d --wait --wait-timeout 600

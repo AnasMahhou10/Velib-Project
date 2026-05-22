@@ -13,7 +13,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "prisma:generate": "prisma generate",
-    "prisma:seed": "prisma db seed"
+    "prisma:seed": "prisma db seed",
+    "docker:build": "docker compose build --no-cache app",
+    "docker:up": "docker compose up -d --build",
+    "docker:refresh": "docker compose down && docker compose build --no-cache app && docker compose up -d"
   },
   "dependencies": {
     "@prisma/client": "^6.19.2",

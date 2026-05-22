@@ -14,14 +14,30 @@ Next.js 16 · React 19 · PostgreSQL · Prisma · JWT (jose) · bcrypt · Leafle
 git clone https://github.com/AnasMahhou10/Velib-Project.git
 cd Velib-Project
 cp .env.example .env
-docker compose up --build
+npm run docker:up
 ```
 
-Ouvre [http://localhost:3001](http://localhost:3001) (Docker utilise le port **3001** pour éviter le conflit avec `npm run dev` sur 3000). Le conteneur `app` définit `DATABASE_URL` vers `db` automatiquement ; `prisma generate` tourne au démarrage (entrypoint).
+Ouvre [http://localhost:3001](http://localhost:3001) (Docker utilise le port **3001** pour éviter le conflit avec `npm run dev` sur 3000).
+
+### Mettre à jour l’app après un `git pull`
+
+**GitHub Actions rebuild l’image sur chaque push** (job CI **Docker**), mais **ça ne met pas à jour ton PC automatiquement**. En local, rebuild obligatoire :
+
+```bash
+npm run docker:refresh
+# équivalent : docker compose down && docker compose build --no-cache app && docker compose up -d
+```
+
+| Commande | Usage |
+|----------|--------|
+| `npm run docker:up` | Démarre avec **rebuild** si le code a changé |
+| `npm run docker:build` | Rebuild image seule (`--no-cache`) |
+| `npm run docker:refresh` | Stop + rebuild complet + redémarrage |
 
 - Premier lancement : ~5–8 min (build + seed OpenData Paris).
 - Le seed nécessite **Internet** (API OpenData Paris).
-- Développement local sans Docker : `npm run dev` → [http://localhost:3000](http://localhost:3000).
+- BDD Docker à réinitialiser : `docker compose down -v` puis `npm run docker:up`.
+- Sans Docker : `npm run dev` → [http://localhost:3000](http://localhost:3000).
 
 ## Démarrage local (sans Docker)
 
@@ -89,10 +105,10 @@ npm test
 npm run lint
 ```
 
-GitHub Actions sur chaque push (`/.github/workflows/ci.yml`) :
+GitHub Actions sur chaque **push** (`/.github/workflows/ci.yml`) :
 - **Qualité** — ESLint + build Next.js
 - **Les tests** — Vitest
-- **Docker** — `docker compose build`, démarrage stack, smoke tests API
+- **Docker** — `docker compose build --no-cache` + stack + smoke tests (rebuild à chaque push)
 
 ## Licence
 
